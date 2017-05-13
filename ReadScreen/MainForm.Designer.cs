@@ -31,12 +31,11 @@
             this.BntOpen = new System.Windows.Forms.Button();
             this.TxtImagePath = new System.Windows.Forms.TextBox();
             this.GrpCal = new System.Windows.Forms.GroupBox();
+            this.Variables = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.TxtFormula = new System.Windows.Forms.TextBox();
             this.TxtXYAngle = new System.Windows.Forms.TextBox();
-            this.TxtRValue = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.BtnCal = new System.Windows.Forms.Button();
             this.CalDataGrid = new System.Windows.Forms.DataGridView();
             this.Point = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -81,12 +80,11 @@
             // 
             // GrpCal
             // 
+            this.GrpCal.Controls.Add(this.Variables);
             this.GrpCal.Controls.Add(this.label6);
             this.GrpCal.Controls.Add(this.TxtFormula);
             this.GrpCal.Controls.Add(this.TxtXYAngle);
-            this.GrpCal.Controls.Add(this.TxtRValue);
             this.GrpCal.Controls.Add(this.label5);
-            this.GrpCal.Controls.Add(this.label4);
             this.GrpCal.Controls.Add(this.BtnCal);
             this.GrpCal.Controls.Add(this.CalDataGrid);
             this.GrpCal.Location = new System.Drawing.Point(23, 109);
@@ -96,10 +94,20 @@
             this.GrpCal.TabStop = false;
             this.GrpCal.Text = "Calibration";
             // 
+            // Variables
+            // 
+            this.Variables.Location = new System.Drawing.Point(134, 273);
+            this.Variables.Name = "Variables";
+            this.Variables.Size = new System.Drawing.Size(88, 34);
+            this.Variables.TabIndex = 8;
+            this.Variables.Text = "Variables";
+            this.Variables.UseVisualStyleBackColor = true;
+            this.Variables.Click += new System.EventHandler(this.Variables_Click);
+            // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(405, 284);
+            this.label6.Location = new System.Drawing.Point(407, 283);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(54, 20);
             this.label6.TabIndex = 7;
@@ -107,45 +115,28 @@
             // 
             // TxtFormula
             // 
-            this.TxtFormula.Location = new System.Drawing.Point(465, 280);
+            this.TxtFormula.Location = new System.Drawing.Point(470, 280);
             this.TxtFormula.Name = "TxtFormula";
             this.TxtFormula.ReadOnly = true;
-            this.TxtFormula.Size = new System.Drawing.Size(104, 27);
+            this.TxtFormula.Size = new System.Drawing.Size(99, 27);
             this.TxtFormula.TabIndex = 6;
             // 
             // TxtXYAngle
             // 
-            this.TxtXYAngle.Location = new System.Drawing.Point(309, 281);
+            this.TxtXYAngle.Location = new System.Drawing.Point(316, 280);
             this.TxtXYAngle.Name = "TxtXYAngle";
             this.TxtXYAngle.ReadOnly = true;
             this.TxtXYAngle.Size = new System.Drawing.Size(81, 27);
             this.TxtXYAngle.TabIndex = 5;
             // 
-            // TxtRValue
-            // 
-            this.TxtRValue.Location = new System.Drawing.Point(149, 278);
-            this.TxtRValue.Name = "TxtRValue";
-            this.TxtRValue.ReadOnly = true;
-            this.TxtRValue.Size = new System.Drawing.Size(73, 27);
-            this.TxtRValue.TabIndex = 4;
-            // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(232, 281);
+            this.label5.Location = new System.Drawing.Point(235, 283);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(71, 20);
             this.label5.TabIndex = 3;
             this.label5.Text = "XYAngle";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(124, 280);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(19, 20);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "R";
             // 
             // BtnCal
             // 
@@ -175,7 +166,6 @@
             this.CalDataGrid.RowTemplate.Height = 27;
             this.CalDataGrid.Size = new System.Drawing.Size(552, 217);
             this.CalDataGrid.TabIndex = 0;
-            this.CalDataGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.CalDataGrid_CellContentClick);
             // 
             // Point
             // 
@@ -348,9 +338,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox TxtFormula;
         private System.Windows.Forms.TextBox TxtXYAngle;
-        private System.Windows.Forms.TextBox TxtRValue;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button BtnCal;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.DataGridView RetGridData;
@@ -359,6 +347,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
+        private System.Windows.Forms.Button Variables;
     }
 }
 

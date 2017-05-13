@@ -9,19 +9,24 @@ namespace ReadScreen
 
     public class Calculator
     {
-        public Calculator(String str, Dictionary<String, double> values)
+        public Calculator(Dictionary<String, double> values)
         {
-            fValues = values;
-            fSrc = str;
-            fRoot = ParseExpression(new CharIterator(str));
-            fNVariables = fVars.Count;
+            fValues = values == null ? new Dictionary<String, double>() : values;
         }
 
-        public int fNVariables;
+        public void SetRootExpression(String str)
+        {
+            fRoot = ParseExpression(str);
+        }
+
+        public void SetRootExpression(Expression exp)
+        {
+            fRoot = exp;
+        }
+
 
         public Expression fRoot;
         public Dictionary<string, double> fValues;
-        public String fSrc;
         public ISet<Variable> fVars = new HashSet<Variable>();
         public Dictionary<String, Variable> fVarsDir = new Dictionary<String, Variable>();
 
@@ -109,7 +114,7 @@ namespace ReadScreen
             return ret;
         }
 
-
+        static Random gRnd = new Random();
         private Expression ParseID(CharIterator it)
         {
             char ch = it.Value();
@@ -122,7 +127,14 @@ namespace ReadScreen
                     variable = new Variable(varname);
                     variable.fIndex = fVars.Count;
                     variable.fName = varname;
-                    variable.fVal = fValues[varname];
+                    if(fValues.ContainsKey(varname))
+                    {
+                        variable.fVal = fValues[varname];
+                    }
+                    else
+                    {
+                        variable.fVal = gRnd.Next() % 1000 / 1000.0;
+                    }
                     fVars.Add(variable);
                     fVarsDir.Add(varname, variable);
                 }
@@ -228,8 +240,9 @@ namespace ReadScreen
             return exp1;
         }
 
-        private Expression ParseExpression(CharIterator it)
+        public Expression ParseExpression(String str)
         {
+            var it = new CharIterator(str);
             var exp1 = ParseAdd(it);
             if (it.Valid())
             {
@@ -240,9 +253,30 @@ namespace ReadScreen
 
     }
 
+
     public class Expression
     {
 
+        public static Expression operator*(Expression a, Expression b)
+        {
+            return new BinaryExpression(Op.Mul, a, b);
+        }
+        public static Expression operator /(Expression a, Expression b)
+        {
+            return new BinaryExpression(Op.Div, a, b);
+        }
+        public static Expression operator -(Expression a, Expression b)
+        {
+            return new BinaryExpression(Op.Sub, a, b);
+        }
+        public static Expression operator +(Expression a, Expression b)
+        {
+            return new BinaryExpression(Op.Add, a, b);
+        }
+        public static Expression operator ^(Expression a, int b)
+        {
+            return new PowExpression(Op.Pow, a, b);
+        }
 
         virtual public double OnEval() { throw new Exception(); }
         virtual public double OnDerivative(Variable x) { throw new Exception(); }
@@ -291,10 +325,10 @@ namespace ReadScreen
         {
             fEval = 0;
             fEvalValid = false;
-            fDerivativeValid = new bool[cal.fNVariables];
-            fDerivative = new double[cal.fNVariables];
-            fDerivative2Valid = new bool[cal.fNVariables, cal.fNVariables];
-            fDerivative2 = new double[cal.fNVariables, cal.fNVariables];
+            fDerivativeValid = new bool[cal.fVars.Count];
+            fDerivative = new double[cal.fVars.Count];
+            fDerivative2Valid = new bool[cal.fVars.Count, cal.fVars.Count];
+            fDerivative2 = new double[cal.fVars.Count, cal.fVars.Count];
         }
     }
 
@@ -613,8 +647,8 @@ namespace ReadScreen
 
     public class Minimizer
     {
-        public Minimizer(String str, Dictionary<String, double> values, int maxInter = 20) {
-            fCal = new Calculator(str, values);
+        public Minimizer(Calculator cal, int maxInter = 20) {
+            fCal = cal;
             fMaxInter = maxInter;
         }
 

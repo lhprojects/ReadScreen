@@ -12,7 +12,9 @@ namespace TestMini
         {
             String str = "x^2-2*x+1";
             var init = new Dictionary<string, double>{ { "x", 0 } };
-            var minzer = new ReadScreen.Minimizer(str, init);
+            var cal = new ReadScreen.Calculator(init);
+            cal.SetRootExpression(str);
+            var minzer = new ReadScreen.Minimizer(cal);
             double min;
             minzer.Minimize(out min);
             Assert.IsTrue(Math.Abs(min - 0) < 1E-6);
@@ -23,7 +25,9 @@ namespace TestMini
         {
             String str = "x^2+x*x+x*x*x*x+2*x";
             var init = new Dictionary<string, double> { { "x", 0 } };
-            var minzer = new ReadScreen.Minimizer(str, init);
+            var cal = new ReadScreen.Calculator(init);
+            cal.SetRootExpression(str);
+            var minzer = new ReadScreen.Minimizer(cal);
             double min;
             minzer.Minimize(out min);
             Assert.IsTrue(Math.Abs(min - -0.456129) < 1E-5);
@@ -34,7 +38,9 @@ namespace TestMini
         {
             String str = "x^2+2*x*y+3*x-y+2*y^2";
             var init = new Dictionary<string, double> { { "x", 0 }, { "y", 0} };
-            var minzer = new ReadScreen.Minimizer(str, init);
+            var cal = new ReadScreen.Calculator(init);
+            cal.SetRootExpression(str);
+            var minzer = new ReadScreen.Minimizer(cal);
             double min;
             minzer.Minimize(out min);
             Assert.IsTrue(Math.Abs(min - -6.25) < 1E-5);
@@ -45,7 +51,9 @@ namespace TestMini
         {
             String str = "x^2+2*x*y+3*x+(-y+2*y^2)";
             var init = new Dictionary<string, double> { { "x", 0 }, { "y", 0 } };
-            var minzer = new ReadScreen.Minimizer(str, init);
+            var cal = new ReadScreen.Calculator(init);
+            cal.SetRootExpression(str);
+            var minzer = new ReadScreen.Minimizer(cal);
             double min;
             minzer.Minimize(out min);
             Assert.IsTrue(Math.Abs(min - -6.25) < 1E-5);
@@ -56,7 +64,9 @@ namespace TestMini
         {
             String str = "x^2+2*x*y+3*x-y+2*y^2+z^2+0.5*x*z+w+w^4/(1+w^2)";
             var init = new Dictionary<string, double> { { "x", 0 }, { "y", 0 }, { "z", 1}, { "w", -0.5} };
-            var minzer = new ReadScreen.Minimizer(str, init);
+            var cal = new ReadScreen.Calculator(init);
+            cal.SetRootExpression(str);
+            var minzer = new ReadScreen.Minimizer(cal);
             double min;
             minzer.Minimize(out min);
             Assert.IsTrue(Math.Abs(min - -7.67525) < 1E-5);

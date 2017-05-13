@@ -12,7 +12,7 @@ namespace ReadScreen
 {
     public partial class ImageForm : Form
     {
-        Fitter fFitter;
+        IFitter fFitter;
         MainForm fMainForm;
         String fImagePath;
         Image fImage;
@@ -74,9 +74,9 @@ namespace ReadScreen
             {
                 Pen lnpen = new Pen(Color.Red, 1);
                 SolidBrush drawBrush = new SolidBrush(Color.Red);
-                for (int i = 0; i < fFitter.fRes.Count; ++i)
+                for (int i = 0; i < fFitter.fResults.Count; ++i)
                 {
-                    var pt = fFitter.fRes.ElementAt(i).Ps;
+                    var pt = fFitter.fResults.ElementAt(i).Ps;
                     float x = pt.X * fScale + fOrigin.X;
                     float y = pt.Y * fScale + fOrigin.Y;
                     var l = new PointF(x - lenlong, y);
@@ -104,16 +104,14 @@ namespace ReadScreen
             float y = (e.Location.Y - fOrigin.Y) / fScale;
             if (e.Button == MouseButtons.Right)
             {
-                DataPoint point = default(DataPoint);
-                point.Ps.X = x;
-                point.Ps.Y = y;
+                var point = new CalPoint(new PointF(x, y), null, null);
                 fFitter.fCal.Add(point);
                 Invalidate();
                 fMainForm.OnFitterChanged();
             }
             else if (e.Button == MouseButtons.Middle)
             {
-                fFitter.AddRes(new PointF(x, y));
+                fFitter.AddResult(new PointF(x, y));
                 Invalidate();
                 fMainForm.OnFitterChanged();
             }
@@ -169,7 +167,7 @@ namespace ReadScreen
         }
 
 
-        public void postInit(String fileName, Fitter fitter, MainForm mainForm)
+        public void postInit(String fileName, IFitter fitter, MainForm mainForm)
         {
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);

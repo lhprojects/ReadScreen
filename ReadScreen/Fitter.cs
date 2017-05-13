@@ -8,38 +8,17 @@ using System.Threading.Tasks;
 namespace ReadScreen
 {
 
-    public struct DataPoint
+    public class IFitter
     {
-        public PointF Ps;
-        public double X;
-        public double Y;
-        public bool XValid;
-        public bool YValid;
-
-    }
-    public class Fitter
-    {
-        public List<DataPoint> fCal;
-        public List<DataPoint> fRes;
-        public bool LogX;
-        public bool LogY;
-
-        public double R;
-        public double U;
-
-
-        public bool CalibrationValid;
-        public double[] Beta1;
-        public double[] Beta2;
-
-
-        public Fitter()
-        {
-            LogX = false;
-            LogY = false;
-            fCal = new List<DataPoint>();
-            fRes = new List<DataPoint>();
-        }
+        public double fXYAngle;
+        public bool fLogX;
+        public bool fLogY;
+        public Matrix fQ; // Q(xp,yp)^T + d = (x,y)^T
+        public Matrix fd;
+        public List<ResultPoint> fResults = new List<ResultPoint>();
+        public List<CalPoint> fCal = new List<CalPoint>();
+        public bool fCalibrationValid;
+        public virtual String Evaluate() { throw new Exception(); }
 
         public void RmCalIdx(int i)
         {
@@ -47,161 +26,218 @@ namespace ReadScreen
         }
         public void RmResIdx(int i)
         {
-            fRes.RemoveAt(i);
+            fResults.RemoveAt(i);
         }
 
-        public void AddRes(PointF pt)
+        public void AddResult(PointF pt)
         {
-            DataPoint dp = new DataPoint();
-            dp.Ps = pt;
-            fRes.Add(dp);
-            compute(fRes.Count - 1);
+            ResultPoint dp = new ResultPoint(pt);
+            OnCompute(dp);
+            fResults.Add(dp);
         }
 
-        public void compute(int i)
+        public void AddCal(PointF pt)
         {
-            var res = fRes.ElementAt(i);
-            if (!CalibrationValid)
+            CalPoint dp = new CalPoint(pt, null, null);
+            fCal.Add(dp);
+        }
+
+        public virtual void OnCompute(ResultPoint dp)
+        {
+            if (!fCalibrationValid)
             {
-                res.XValid = false;
-                res.YValid = false;
-                fRes[i] = res;
+                dp.XValid = false;
+                dp.YValid = false;
                 return;
             }
-            //   px = b10 + b11*x + b12*y
-            //   py = b20 + b21*x + b22*y
-            double a = Beta1[1];
-            double b = Beta1[2];
-            double c = Beta2[1];
-            double d = Beta2[2];
-            double det = -b * c + a * d;
 
-            double px = res.Ps.X;
-            double py = res.Ps.Y;
-            px -= Beta1[0];
-            py -= Beta2[0];
+            Matrix p = new Matrix(2, 1);
+            p[0, 0] = dp.Ps.X;
+            p[1, 0] = dp.Ps.Y;
+            Matrix v = fQ * p + fd;
+            dp.X = v[0, 0];
+            dp.Y = v[1, 0];
 
-            double x = (d * px - b * py) / det;
-            double y = (-c * px + a * py) / det;
-
-            res.X = LogX ? Math.Exp(x) : x;
-            res.Y = LogY ? Math.Exp(y) : y;
-            res.XValid = true;
-            res.YValid = true;
-            fRes[i] = res;
+            dp.X = fLogX ? Math.Exp(dp.X) : dp.X;
+            dp.Y = fLogY ? Math.Exp(dp.Y) : dp.Y;
+            dp.XValid = true;
+            dp.YValid = true;
         }
 
-        void Inverse(double [,] mat, double [,] inv)
+        public IFitter()
         {
-            double a = mat[0, 0];
-            double b = mat[0, 1];
-            double c = mat[0, 2];
-            double d = mat[1, 0];
-            double e = mat[1, 1];
-            double f = mat[1, 2];
-            double g = mat[2, 0];
-            double h = mat[2, 1];
-            double i = mat[2, 2];
-            double det = -c * e * g + b * f * g + c * d * h - a * f * h - b * d * i + a * e * i;
-
-            inv[0, 0] = -f * h + e * i;
-            inv[0, 1] = c * h - b * i;
-            inv[0, 2] = -c * e + b * f;
-            inv[1, 0] = f * g - d * i;
-            inv[1, 1] = -c * g + a * i;
-            inv[1, 2] = c * d - a * f;
-            inv[2, 0] = -e * g + d * h;
-            inv[2, 1] = b * g - a * h;
-            inv[2, 2] = -b * d + a * e;
-
-            for (int k = 0; k < 3; ++k)
-            {
-                for (int j = 0; j < 3; ++j)
-                {
-                    inv[k, j] /= det;
-                }
-
-            }
+            fLogX = false;
+            fLogY = false;
         }
 
-        void LinearRegression(double[][] x, double[] y, double[] beta)
+    }
+
+    public class ResultPoint
+    {
+        public ResultPoint(PointF ps) { Ps = ps; XValid = false; YValid = false; }
+
+        public PointF Ps; // in pixels
+        public double X;
+        public double Y;
+        public bool XValid;
+        public bool YValid;
+
+    }
+
+    public class CalPoint
+    {
+        public CalPoint(PointF ps, String x, String y)
+        {
+            Ps = ps;
+            fX = x;
+            fY = y;
+        }
+
+        public PointF Ps; // in pixels
+        public String fX;
+        public String fY;
+
+    }
+
+
+    public class Fitter : IFitter
+    {
+
+        public Fitter()
+        {
+        }
+
+
+        // https://en.wikipedia.org/wiki/Linear_regression
+        static void LinearRegression(double[/*N*/,/*p*/] X, double[/*N*/] y, double[/*p*/] beta)
         {
             int N = y.Length;
-            double[] t = new double[3];
-            for (int i = 0; i < N; ++i)
-            {
-                for (int j = 0; j < t.Length; ++j)
-                {
-                    t[j] += x[i][j] * y[i];
-                }
-            }
+            int p = beta.Length;
+            Matrix X_ = new Matrix(N, p);
+            X_.mat = (double[,])X.Clone();
+            Matrix y_ = new Matrix(N, 1);
+            for (int i = 0; i < N; ++i) y_[i, 0] = y[i];
 
-            double[,] mat = new double[t.Length, t.Length];
-            double[,] inv = new double[t.Length, t.Length];
-            for (int k = 0; k < t.Length; ++k)
-            {
-                for (int j = 0; j < t.Length; ++j)
-                {
-                    for (int i = 0; i < N; ++i)
-                    {
-                        mat[k, j] += x[i][k] * x[i][j];
-                    }
-                }
-            }
-            Inverse(mat, inv);
+            Matrix XT_ = Matrix.Transpose(X_);
+            Matrix beta_ = (XT_ * X_).Invert() * (XT_ * y_);
 
-            for (int k = 0; k < t.Length; ++k)
-            {
-                beta[k] = 0;
-                for (int j = 0; j < t.Length; ++j)
-                {
-                    beta[k] += inv[k, j] * t[j];
-                }
-            }
+            for (int i = 0; i < p; ++i) beta[i] = beta_[i, 0];
+
         }
 
-        public String Evaluate()
+        override public String Evaluate()
         {
+            fCalibrationValid = false;
             String err = "Done";
-            bool valid = true;
-            do {
-                int nValid = 0;
-                foreach (var p in fCal)
-                {
-                    nValid += p.XValid && p.YValid ? 1　: 0;
-                }
-                if (nValid < 3)
-                {
-                    err = "Too Less Data to Calibrate";
-                    valid = false;
-                    break;
-                }
-            } while (false);
-            CalibrationValid = valid;
 
-            R = 0;
-            U = 0;
-            if (CalibrationValid)
+            var Beta1 = new double[3];
+            var Beta2 = new double[3];
+
+            int N = fCal.Count;
+            double[,] X = new double[N, 3];
+
+            bool linear = true;
+            try
             {
-                int N = fCal.Count;
-                Beta1 = new double[3];
-                Beta2 = new double[3];
+                int i = 0;
+                foreach (var c in fCal)
+                {
+                    X[i, 1] = Convert.ToDouble(c.fX);
+                    X[i, 2] = Convert.ToDouble(c.fY);
+                    ++i;
+                }
+            }
+            catch (Exception)
+            {
+                linear = false;
+            }
+
+
+            if (linear && false)
+            {
+                if (N < 3)
+                {
+                    err = "Too less calibration points!";
+                    return err;
+                }
+
                 double[] y1 = new double[N];
                 double[] y2 = new double[N];
-                double[][] X = new double[N][];
                 for (int i = 0; i < N; ++i)
                 {
-                    double x0 = 1;
-                    double x1 = fCal.ElementAt(i).X;
-                    if (LogX) x1 = Math.Log(x1);
-                    double x2 = fCal.ElementAt(i).Y;
-                    if (LogY) x2 = Math.Log(x2);
+                    X[i, 0] = 1;
+                    if (fLogX) X[i, 1] = Math.Log(X[i, 1]);
+                    if (fLogX) X[i, 2] = Math.Log(X[i, 2]);
                     y1[i] = fCal.ElementAt(i).Ps.X;
                     y2[i] = fCal.ElementAt(i).Ps.Y;
-                    X[i] = new double[] { x0, x1, x2 };
                 }
                 LinearRegression(X, y1, Beta1);
                 LinearRegression(X, y2, Beta2);
+                fCalibrationValid = true;
+            }
+            else
+            {
+                try
+                {
+
+                    Calculator cal = new Calculator(null);
+                    var pxx = cal.ParseExpression("@pxx");
+                    var pxy = cal.ParseExpression("@pxy");
+                    var pyx = cal.ParseExpression("@pyx");
+                    var pyy = cal.ParseExpression("@pyy");
+                    var px0 = cal.ParseExpression("@px0");
+                    var py0 = cal.ParseExpression("@py0");
+                    Expression chi2 = null;
+                    foreach (var c in fCal)
+                    {
+                        var px = new NumberExpression(c.Ps.X);
+                        var py = new NumberExpression(c.Ps.Y);
+                        var x = cal.ParseExpression(c.fX);
+                        var y = cal.ParseExpression(c.fY);
+                        var c2 = ((pxx * x + pxy * y + px0 - px) ^ 2) + ((pyx * x + pyy * y + py0 - py) ^ 2);
+                        if (chi2 == null) chi2 = c2;
+                        else chi2 = chi2 + c2;
+                    }
+                    cal.SetRootExpression(chi2);
+                    Minimizer minzer = new Minimizer(cal);
+                    double mn;
+                    var result = minzer.Minimize(out mn);
+                    Beta1[0] = result["@px0"];
+                    Beta1[1] = result["@pxx"];
+                    Beta1[2] = result["@pxy"];
+                    Beta2[0] = result["@py0"];
+                    Beta2[1] = result["@pyx"];
+                    Beta2[2] = result["@pyy"];
+                    fCalibrationValid = true;
+                    err = "chi2 = " + mn.ToString();
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine(e.StackTrace);
+                    err = "Minization error";
+                }
+            }
+
+            if(fCalibrationValid){
+                // xp = b10 + b1x*x + b1y*y
+                // yp = b20 + b2x*x + b2y*y
+                // (xp,yp)^T =  (b10,b20)^T + (b1x, b1y // b2x b2y)(x,y)^T
+                var m = new Matrix(2, 2);
+                m[0, 0] = Beta1[1];
+                m[0, 1] = Beta1[2];
+                m[1, 0] = Beta2[1];
+                m[1, 1] = Beta2[2];
+                var d = new Matrix(2, 1);
+                d[0, 0] = Beta1[0];
+                d[1, 0] = Beta2[0];
+                try
+                {
+                    fQ = m.Invert();
+                } catch(Exception) {
+                    err = "invert wrong";
+                    return err;
+                }
+                fd = fQ * (-d);
 
                 double xvx = Beta1[1];
                 double xvy = Beta2[1];
@@ -211,16 +247,18 @@ namespace ReadScreen
                 double yr = 1 / Math.Sqrt(yvx * yvx + yvy * yvy);
                 double cc = xvx * yvy - xvy * yvx;
                 cc = cc * xr * yr;
+
+                fXYAngle = 0;
                 if (cc >= 1) cc = 1;
                 else if (cc <= -1) cc = -1;
-                U = Math.Asin(cc) / Math.PI * 180;
+                fXYAngle = Math.Asin(cc) / Math.PI * 180;
                 // Note the defintion of Y axias in pixels coordinates
-                U = -U;
-            }
+                fXYAngle = -fXYAngle;
 
-            for (int i = 0; i < fRes.Count; ++i)
-            {
-                compute(i);
+                foreach (var r in fResults)
+                {
+                    OnCompute(r);
+                }
             }
 
             return err;

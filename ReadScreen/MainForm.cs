@@ -12,7 +12,7 @@ namespace ReadScreen
 {
     public partial class MainForm : Form
     {
-        Fitter fitter = new Fitter();
+        IFitter fitter = new Fitter();
         ImageForm fImageForm;
         public MainForm()
         {
@@ -31,19 +31,19 @@ namespace ReadScreen
                     String.Format("C{0}", i),
                     String.Format("{0}", cal.Ps.X),
                     String.Format("{0}", cal.Ps.Y),
-                    cal.XValid? String.Format("{0}", cal.X):null,
-                    cal.YValid ? String.Format("{0}", cal.Y):null
+                    cal.fX,
+                    cal.fY
                     );
             }
-            for (int i = 0; i < fitter.fRes.Count; ++i)
+            for (int i = 0; i < fitter.fResults.Count; ++i)
             {
-                var cal = fitter.fRes.ElementAt(i);
+                var result = fitter.fResults.ElementAt(i);
                 RetGridData.Rows.Add(
                     String.Format("R{0}", i),
-                    String.Format("{0}", cal.Ps.X),
-                    String.Format("{0}", cal.Ps.Y),
-                    cal.XValid ? String.Format("{0}", cal.X) : null,
-                    cal.YValid ? String.Format("{0}", cal.Y) : null
+                    String.Format("{0}", result.Ps.X),
+                    String.Format("{0}", result.Ps.Y),
+                    result.XValid ? String.Format("{0}", result.X) : null,
+                    result.YValid ? String.Format("{0}", result.Y) : null
                     );
             }
         }
@@ -83,28 +83,16 @@ namespace ReadScreen
             DataGridView view = (DataGridView)sender;
             var value = view.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
             String newValue = value == null ? null : value.ToString();
-            double newNum = 0;
-            try
-            {
-                newNum = Convert.ToDouble(newValue);
-            }
-            catch (Exception)
-            {
-                return;
-            }
-
+ 
             var t = fitter.fCal[e.RowIndex];
             if (e.ColumnIndex == 3)
             {
-                t.X = newNum;
-                t.XValid = true;
+                t.fX = newValue;
             }
             else if (e.ColumnIndex == 4)
             {
-                t.Y = newNum;
-                t.YValid = true;
+                t.fY = newValue;
             }
-            fitter.fCal[e.RowIndex] = t;
         }
 
         int deletingIndex;
@@ -157,27 +145,26 @@ namespace ReadScreen
 
         private void XAxisType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            fitter.LogX = ((ComboBox)sender).SelectedIndex == 0 ? false : true;
+            fitter.fLogX = ((ComboBox)sender).SelectedIndex == 0 ? false : true;
         }
 
         private void YAxisType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            fitter.LogY = ((ComboBox)sender).SelectedIndex == 0 ? false : true;
+            fitter.fLogY = ((ComboBox)sender).SelectedIndex == 0 ? false : true;
         }
         
         private void BtnCal_Click(object sender, EventArgs e)
         {
             String str = fitter.Evaluate();
             TxtFormula.Text = str;
-            TxtRValue.Text = String.Format("{0}", fitter.R);
-            TxtXYAngle.Text = String.Format("{0}", fitter.U);
+            TxtXYAngle.Text = String.Format("{0}", fitter.fXYAngle);
             if(str.Equals("Done"))
             {
                 this.OnFitterChanged();
             }
         }
 
-        private void CalDataGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void Variables_Click(object sender, EventArgs e)
         {
 
         }
