@@ -166,6 +166,7 @@
             this.CalDataGrid.RowTemplate.Height = 27;
             this.CalDataGrid.Size = new System.Drawing.Size(552, 217);
             this.CalDataGrid.TabIndex = 0;
+            this.CalDataGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.CalDataGrid_CellContentClick);
             // 
             // Point
             // 

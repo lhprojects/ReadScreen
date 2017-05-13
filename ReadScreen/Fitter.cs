@@ -18,6 +18,8 @@ namespace ReadScreen
         public List<ResultPoint> fResults = new List<ResultPoint>();
         public List<CalPoint> fCal = new List<CalPoint>();
         public bool fCalibrationValid;
+        public Dictionary<String, double> fInitialValues = new Dictionary<String, double>();
+
         public virtual String Evaluate() { throw new Exception(); }
 
         public void RmCalIdx(int i)
@@ -180,7 +182,7 @@ namespace ReadScreen
                 try
                 {
 
-                    Calculator cal = new Calculator(null);
+                    Calculator cal = new Calculator(fInitialValues);
                     var pxx = cal.ParseExpression("@pxx");
                     var pxy = cal.ParseExpression("@pxy");
                     var pyx = cal.ParseExpression("@pyx");

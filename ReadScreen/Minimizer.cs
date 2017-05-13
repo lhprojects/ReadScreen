@@ -655,23 +655,37 @@ namespace ReadScreen
         public Dictionary<String,double> Minimize(out double min)
         {
             min = 0;
-            var fVars = fCal.fVars;
             var fRoot = fCal.fRoot;
-
-            Matrix qm = new Matrix(fVars.Count, fVars.Count);
-            Matrix d = new Matrix(fVars.Count, 1);
-            Matrix deltaV = new Matrix(fVars.Count, 1);
+            var allVars = fCal.fVars;
 
             for (int n = 0; n < fMaxInter; ++n)
             {
+                var vars = allVars;
+                if (n == 0) {
+                    vars = new HashSet<Variable>();
+                    int i = 0;
+                    foreach(var v in allVars)
+                    {
+                        if(v.fName.Contains("@"))
+                            vars.Add(v);
+                    }
+                }
+
+                int nVar = vars.Count;
+
+                Matrix qm = new Matrix(nVar, nVar);
+                Matrix d = new Matrix(nVar, 1);
+                Matrix deltaV = new Matrix(nVar, 1);
+
                 fRoot.OnVariablesChanged(fCal);
-                foreach (var v in fVars)
+
+                foreach (var v in vars)
                 {
                     d[v.fIndex, 0] = fRoot.Derivative(v);
                 }
-                foreach (var v1 in fVars)
+                foreach (var v1 in vars)
                 {
-                    foreach (var v2 in fVars)
+                    foreach (var v2 in vars)
                     {
                         if (v1.fIndex <= v2.fIndex)
                         {
@@ -683,7 +697,7 @@ namespace ReadScreen
                 // q(delta v) + d = 0;
                 // deltaV = q^-1 * (-d)
                 deltaV =  qm.Invert()*(-d);
-                foreach (var v in fVars)
+                foreach (var v in vars)
                 {
                     v.fVal += deltaV[v.fIndex, 0];
                 }
@@ -691,7 +705,7 @@ namespace ReadScreen
             }
 
             fResults.Clear();
-            foreach (var v in fVars)
+            foreach (var v in allVars)
             {
                 fResults.Add(v.fName, v.fVal);
             }

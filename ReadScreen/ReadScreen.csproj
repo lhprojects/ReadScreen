@@ -62,7 +62,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Fitter.cs" />
-    <Compile Include="Fitter2.cs" />
+    <Compile Include="VariablesDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VariablesDialog.Designer.cs">
+      <DependentUpon>VariablesDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="ImageForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -94,6 +99,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="VariablesDialog.resx">
+      <DependentUpon>VariablesDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

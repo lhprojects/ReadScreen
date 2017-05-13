@@ -166,6 +166,15 @@ namespace ReadScreen
 
         private void Variables_Click(object sender, EventArgs e)
         {
+            if(fitter != null)
+            {
+                var dialog = new VariablesDialog(fitter);
+                dialog.ShowDialog(this);
+            }
+        }
+
+        private void CalDataGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
 
         }
     }
